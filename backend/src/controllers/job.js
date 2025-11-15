@@ -35,16 +35,36 @@ const mockGovJobs = [
 
 /**
  * Fetches private jobs from Adzuna API
+ * @param {string} searchQuery - Job search query (e.g., "React Developer")
+ * @param {string} searchLocation - Location to search (e.g., "Bangalore")
  */
-const fetchFromAdzuna = async () => {
+const fetchFromAdzuna = async (searchQuery = null, searchLocation = null) => {
   console.log('Fetching private jobs from Adzuna...');
   try {
-    // Get search params from .env, with fallbacks
-    const country = process.env.ADZUNA_COUNTRY || 'us';
-    const query = process.env.ADZUNA_QUERY || 'software developer';
-    const location = process.env.ADZUNA_LOCATION || 'New York';
+    // Get search params from parameters or .env
+    const country = process.env.ADZUNA_COUNTRY || 'in';
+    const query = searchQuery || process.env.ADZUNA_QUERY || 'software developer';
+    const location = searchLocation || process.env.ADZUNA_LOCATION || 'India';
 
-    // UPDATED API CALL: Uses environment variables for country
+    // Log the parameters being sent (for debugging)
+    console.log('\n🔍 === ADZUNA API REQUEST ===');
+    console.log(`Country: ${country}`);
+    console.log(`Query (what): ${query}`);
+    console.log(`Location (where): ${location}`);
+    console.log(`App ID: ${process.env.ADZUNA_APP_ID?.substring(0, 5)}...`);
+    console.log(`App Key: ${process.env.ADZUNA_APP_KEY?.substring(0, 5)}...`);
+    
+    // Log the full URL being called
+    const apiUrl = `https://api.adzuna.com/v1/api/jobs/${country}/search/1`;
+    console.log(`🌐 API URL: ${apiUrl}`);
+    console.log('📋 Query Params:');
+    console.log(`   - what: "${query}"`);
+    console.log(`   - where: "${location}"`);
+    console.log(`   - app_id: ${process.env.ADZUNA_APP_ID}`);
+    console.log(`   - app_key: ${process.env.ADZUNA_APP_KEY}`);
+    console.log('==========================\n');
+
+    // UPDATED API CALL: Uses parameters or environment variables
     const response = await axios.get(`https://api.adzuna.com/v1/api/jobs/${country}/search/1`, {
       params: {
         app_id: process.env.ADZUNA_APP_ID, 
@@ -57,9 +77,15 @@ const fetchFromAdzuna = async () => {
 
     const jobs = response.data.results;
     if (!jobs || jobs.length === 0) {
-      console.log('No jobs found from Adzuna.');
+      console.log('⚠️  No jobs found from Adzuna API.');
+      console.log(`Response status: ${response.status}`);
+      console.log(`Total available on API: ${response.data.count || 0}`);
       return;
     }
+
+    console.log(`✅ API Response Success!`);
+    console.log(`📊 Found ${response.data.count} total jobs on Adzuna, received ${jobs.length} items for page 1`);
+    console.log(`💰 Mean salary: ${response.data.mean ? `₹${response.data.mean.toLocaleString()}` : 'N/A'}`);
 
     // "Upsert" jobs: Update if exists, insert if new
     // This prevents creating duplicates on every sync
@@ -70,8 +96,16 @@ const fetchFromAdzuna = async () => {
         companyName: job.company.display_name,
         locationString: job.location.display_name,
         source: 'Private - Adzuna',
-        jobType: job.contract_type || 'full_time',
-        description: job.description
+        jobType: job.contract_type || job.contract_time || 'full_time',
+        description: job.description,
+        // New fields from Adzuna API
+        category: job.category?.label || 'Job',
+        redirectUrl: job.redirect_url || '',
+        salaryMin: job.salary_min || null,
+        salaryMax: job.salary_max || null,
+        latitude: job.latitude || null,
+        longitude: job.longitude || null,
+        createdDate: job.created || new Date()
       };
       
       return Job.findOneAndUpdate(
@@ -85,14 +119,24 @@ const fetchFromAdzuna = async () => {
     console.log(`Successfully synced ${jobs.length} Adzuna jobs.`);
 
   } catch (error) {
+    console.error('\n❌ === ADZUNA API ERROR ===');
     if (error.response && error.response.status === 401) {
-      console.error('ADZUNA AUTH ERROR: Invalid App ID or App Key. Check your .env file.');
+      console.error('ERROR: Invalid App ID or App Key');
+      console.error('FIX: Check your .env file for ADZUNA_APP_ID and ADZUNA_APP_KEY');
     } else if (error.response && error.response.status === 400) {
-      console.error('ADZUNA BAD REQUEST (400): The request was malformed. This can be due to incorrect App ID/Key or invalid parameters.');
+      console.error('ERROR: Bad Request (400) - Request was malformed');
+      console.error('Possible issues:');
+      console.error('  1. Invalid App ID or App Key format');
+      console.error('  2. Invalid search query or location');
+      console.error('  3. Missing required parameters');
       console.error('Data sent:', error.config.params);
+    } else if (error.code === 'ECONNREFUSED') {
+      console.error('ERROR: Cannot connect to Adzuna API');
+      console.error('FIX: Check your internet connection');
     } else {
-      console.error('Error fetching from Adzuna API:', error.message);
+      console.error(`ERROR: ${error.message}`);
     }
+    console.error('==========================\n');
   }
 };
 
@@ -122,12 +166,36 @@ const seedGovJobs = async () => {
 
 /**
  * GET /api/jobs
- * Fetches all jobs from our MongoDB
+ * Fetches jobs from MongoDB with optional filtering
+ * Query Parameters:
+ *   - role: Filter by job title
+ *   - company: Filter by company name
+ *   - location: Filter by location
  */
 export const getJobs = async (req, res) => {
   try {
-    // Find all jobs, sort by most recent
-    const jobs = await Job.find({}).sort({ createdAt: -1 });
+    let query = {};
+    
+    // Build MongoDB query from frontend filters
+    if (req.query.role) {
+      console.log(`🔍 Filtering by role: "${req.query.role}"`);
+      query.title = { $regex: req.query.role, $options: 'i' }; // Case-insensitive
+    }
+    
+    if (req.query.company) {
+      console.log(`🔍 Filtering by company: "${req.query.company}"`);
+      query.companyName = { $regex: req.query.company, $options: 'i' };
+    }
+    
+    if (req.query.location) {
+      console.log(`🔍 Filtering by location: "${req.query.location}"`);
+      query.locationString = { $regex: req.query.location, $options: 'i' };
+    }
+
+    // Find jobs matching query, sort by most recent
+    const jobs = await Job.find(query).sort({ createdAt: -1 });
+    
+    console.log(`✅ Found ${jobs.length} jobs matching filters`);
     res.json(jobs);
   } catch (error) {
     console.error("Error fetching jobs:", error);
@@ -137,12 +205,12 @@ export const getJobs = async (req, res) => {
 
 /**
  * POST /api/jobs/sync
- * Manually re-runs the data fetching functions
+ * Manually re-runs the data fetching functions (syncs all default jobs)
  */
 export const syncJobs = async (req, res) => {
   try {
     console.log('Manual sync triggered...');
-    await fetchFromAdzuna();
+    await fetchFromAdzuna(process.env.ADZUNA_QUERY || 'software developer');
     await seedGovJobs();
     console.log('Manual sync complete.');
     // Send back the newly updated list of jobs
@@ -154,19 +222,57 @@ export const syncJobs = async (req, res) => {
 };
 
 /**
+ * POST /api/jobs/search
+ * Search Adzuna API for new jobs based on user query and location
+ * Request Body:
+ *   - query: Job search query (e.g., "React Developer")
+ *   - location: Location to search (e.g., "Bangalore")
+ */
+export const searchAdzunaJobs = async (req, res) => {
+  try {
+    const { query, location } = req.body;
+    
+    // Validate input
+    if (!query || query.trim() === '') {
+      return res.status(400).json({ message: "Search query is required" });
+    }
+    
+    console.log(`\n🔎 === ADZUNA SEARCH REQUEST ===`);
+    console.log(`Query: "${query}"`);
+    console.log(`Location: "${location || 'India'}"`);
+    console.log(`================================\n`);
+    
+    const searchQuery = query.trim();
+    const searchLocation = location?.trim() || 'India';
+    
+    // Call Adzuna API with user's search parameters
+    await fetchFromAdzuna(searchQuery, searchLocation);
+    
+    console.log(`✅ Search complete. Fetching results...\n`);
+    
+    // Return the newly found jobs
+    getJobs(req, res);
+  } catch (error) {
+    console.error('Error during search:', error);
+    res.status(500).json({ message: "Error searching for jobs" });
+  }
+};
+
+/**
  * seedDatabase
  * Runs on server startup to ensure DB is not empty
+ * OPTIMIZED: Only seeds government jobs on startup (Adzuna takes too long)
  */
 export const seedDatabase = async () => {
   try {
     const jobCount = await Job.countDocuments();
     if (jobCount === 0) {
-      console.log("No jobs found. Running initial sync...");
-      await fetchFromAdzuna();
+      console.log("\n⏱️  No jobs found. Seeding initial government jobs...");
+      console.log("📌 Tip: Click 'Sync Jobs' to fetch private jobs from Adzuna API\n");
       await seedGovJobs();
-      console.log("Initial sync complete.");
+      console.log("✅ Initial government jobs seeded.\n");
     } else {
-      console.log("Database already contains data. Skipping initial seed.");
+      console.log(`\n✅ Database already contains ${jobCount} jobs. Skipping initial seed.\n`);
     }
   } catch (error) {
     console.error("Error seeding database:", error);

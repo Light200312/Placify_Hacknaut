@@ -1,63 +1,61 @@
-import React from "react";
-import HomePage from "./pages/HomePage.jsx";
-import { Routes, Route, Link } from "react-router-dom";
-import LandingPage from "./pages/LandingPage.jsx";
-import JobAnalyzer from "./pages/JobAnalyzer.jsx";
-import JobPost from "./pages/JobPosts.jsx";
-export default function App() {
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
+
+// Pages2 (New structure)
+import HomePage from './pages2/HomePage';
+import CompanyDetailPage from './pages2/CompanyDetailPage';
+import TestRouter from './pages2/TestRouter';
+import ResultPage from './pages2/ResultPage';
+import BlogPage from './pages2/BlogPage';
+import BlogDetailPage from './pages2/BlogDetailPage';
+import ContactPage from './pages2/ContactPage';
+import LoginPage from './pages2/Auth/LoginPage';
+import SignupPage from './pages2/Auth/SignupPage';
+
+// Old pages (for compatibility)
+import OldHomePage from './pages/HomePage.jsx';
+import JobAnalyzer from './pages/JobAnalyzer.jsx';
+import JobPost from './pages/JobPosts.jsx';
+
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const { token } = useAuth();
+  return token ? children : <Navigate to="/login" />;
+};
+
+function App() {
   return (
-    <div
-      className="bg-gray-100 text-gray-900 min-h-screen p-4 md:p-8"
-      style={{ fontFamily: "'Inter', sans-serif" }}
-    >
-       <nav className="flex w-full items-center justify-between rounded-lg bg-gray-900 p-4 mb-8 text-white">
+    <Routes>
+      {/* Main Landing Page */}
+      <Route path="/" element={<HomePage />} />
       
-      {/* 1. Brand/Logo Section */}
-      <div>
-        <Link 
-          to="/" 
-          // - Removed mb-4, as it can break vertical alignment in a navbar
-          // - Added transition and a hover effect for the brand
-          className="text-2xl font-bold text-white transition-colors duration-200 hover:text-indigo-400"
-        >
-          Hacknaut
-        </Link>
-      </div>
+      {/* Auth Routes */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+      
+      {/* Public Routes */}
+      <Route path="/blog" element={<BlogPage />} />
+      <Route path="/blog/:id" element={<BlogDetailPage />} />
+      <Route path="/contact" element={<ContactPage />} />
 
-      {/* 2. Navigation Links Section */}
-      {/* - This div groups the links
-        - Removed 'w-full' and 'justify-content-between'
-        - Added 'space-x-6' to create consistent spacing between links
-      */}
-      <div className="flex items-center space-x-6">
-        <Link 
-          to="/appraise" 
-          
-          className="font-medium text-gray-300 transition-colors duration-200 hover:text-indigo-400"
-        >
-          Skill Appraisal
-        </Link>
-        <Link 
-          to="/analysejob" 
-          className="font-medium text-gray-300 transition-colors duration-200 hover:text-indigo-400"
-        >
-          Company Analyser
-        </Link>
-         <Link 
-          to="/jobposts" 
-          className="font-medium text-gray-300 transition-colors duration-200 hover:text-indigo-400"
-        >
-          Job Posts
-        </Link>
-      </div>
-    </nav>
+      {/* Company Preparation Routes (Protected) */}
+      <Route path="/company/:companyName" element={<ProtectedRoute><CompanyDetailPage /></ProtectedRoute>} />
+      
+      {/* Dynamic Test Route - handles all test types (aptitude, technical, communication, etc) */}
+      <Route path="/company/:companyName/:roundType" element={<ProtectedRoute><TestRouter /></ProtectedRoute>} />
+      
+      {/* Results Route (Protected) */}
+      <Route path="/results/:companyName/:roundType" element={<ProtectedRoute><ResultPage /></ProtectedRoute>} />
+      
+      {/* Old Routes (for backward compatibility) */}
+      <Route path="/appraise" element={<OldHomePage />} />
+      <Route path="/analysejob" element={<JobAnalyzer />} />
+      <Route path="/jobposts" element={<JobPost />} />
 
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/appraise" element={<HomePage />} />
-        <Route path="/analysejob" element={<JobAnalyzer />} />
-        <Route path="/jobposts" element={<JobPost />} />
-      </Routes>
-    </div>
+      {/* 404 Not Found */}
+      <Route path="*" element={<div className="min-h-screen flex items-center justify-center"><div className="text-center text-red-600 text-2xl font-bold">404 - Page Not Found</div></div>} />
+    </Routes>
   );
 }
+
+export default App;
