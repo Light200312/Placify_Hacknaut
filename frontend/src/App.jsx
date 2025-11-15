@@ -3,6 +3,7 @@ import HomePage from "./pages/HomePage.jsx";
 import { Routes, Route, Link } from "react-router-dom";
 import LandingPage from "./pages/LandingPage.jsx";
 import JobAnalyzer from "./pages/JobAnalyzer.jsx";
+import JobPost from "./pages/JobPosts.jsx";
 export default function App() {
   return (
     <div
@@ -42,6 +43,12 @@ export default function App() {
         >
           Company Analyser
         </Link>
+         <Link 
+          to="/jobposts" 
+          className="font-medium text-gray-300 transition-colors duration-200 hover:text-indigo-400"
+        >
+          Job Posts
+        </Link>
       </div>
     </nav>
 
@@ -49,6 +56,7 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/appraise" element={<HomePage />} />
         <Route path="/analysejob" element={<JobAnalyzer />} />
+        <Route path="/jobposts" element={<JobPost />} />
       </Routes>
     </div>
   );
