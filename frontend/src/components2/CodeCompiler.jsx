@@ -106,7 +106,7 @@ function CodeCompiler({ code, language }) {
   return (
     <div className="bg-gray-900 text-white rounded-lg p-4 space-y-3">
       {/* Input Section */}
-      <div>
+      {/* <div>
         <label className="block text-sm font-semibold mb-2">Input (Optional)</label>
         <textarea
           value={input}
@@ -114,19 +114,19 @@ function CodeCompiler({ code, language }) {
           placeholder="Enter input here..."
           className="w-full h-20 bg-gray-800 border border-gray-700 rounded p-2 text-sm font-mono resize-none"
         />
-      </div>
+      </div> */}
 
       {/* Run Button */}
-      <button
+      {/* <button
         onClick={executeCode}
         disabled={loading}
         className="w-full py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 font-semibold rounded transition"
       >
         {loading ? 'Executing...' : '▶ Run Code'}
-      </button>
+      </button> */}
 
       {/* Output Section */}
-      <div>
+      {/* <div>
         <label className="block text-sm font-semibold mb-2">Output</label>
         <div className="bg-gray-800 border border-gray-700 rounded p-3 h-32 overflow-auto text-sm font-mono whitespace-pre-wrap break-words">
           {error ? (
@@ -138,7 +138,7 @@ function CodeCompiler({ code, language }) {
             <span className="text-green-400">{output || 'Output will appear here...'}</span>
           )}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
