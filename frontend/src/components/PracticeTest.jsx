@@ -10,6 +10,7 @@ const parseQuestionCount = (str) => {
   return match ? parseInt(match[0], 10) : 5;
 };
 
+
 /** Parse duration like "60 min" → seconds */
 const parseDurationToSeconds = (str) => {
   if (!str) return null;
@@ -130,7 +131,7 @@ const PracticeTest = ({ company, round, numQuestions, onClose, timeLimit }) => {
   // Error UI
   if (error || questions.length === 0) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 py-10">
         <div className="bg-white p-8 rounded-lg max-w-md">
           <p className="text-xl text-red-600 font-bold mb-4">⚠️ Error Loading Questions</p>
           <p className="text-gray-700 mb-6">{error}</p>

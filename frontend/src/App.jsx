@@ -16,7 +16,7 @@ import CollegeHiring from './pages/CollegeHiring';
 import OldHomePage from './pages/HomePage.jsx';
 import JobAnalyzer from './pages/JobAnalyzer.jsx';
 import JobPost from './pages/JobPosts.jsx';
-
+import SuggestionPage from './pages/SuggestionPage.jsx';
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { token } = useAuth();
@@ -52,6 +52,7 @@ function App() {
       <Route path="/analysejob" element={<JobAnalyzer />} />
       <Route path="/jobposts" element={<JobPost />} />
       <Route path="/collegehiring" element={<CollegeHiring />} />
+      <Route path="/suggestions" element={<SuggestionPage />} />
 
       {/* 404 Not Found */}
       <Route path="*" element={<div className="min-h-screen flex items-center justify-center"><div className="text-center text-red-600 text-2xl font-bold">404 - Page Not Found</div></div>} />

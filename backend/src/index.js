@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from "dotenv"; // Use .env file for environment variables
 dotenv.config();
-
+import suggestionRoutes from './routes/suggestionRoutes.js';
 // --- Import local modules ---
 import connectDB from './config/db.js'; // <-- Our DB connection function
 import { seedDatabase } from './controllers/job.js';
@@ -50,6 +50,7 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/v1/compile/execute', compilerRoutes);
 
 app.use('/api/colleges', collegeRoutes);
+app.use('/api/suggestions', suggestionRoutes);
 
 
 // --- Start Server Function ---

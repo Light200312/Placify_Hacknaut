@@ -27,18 +27,6 @@ function Header() {
 
         {/* Navigation */}
         <nav className="hidden md:flex gap-8 items-center">
-         <Link to="/" className="text-gray-700 hover:text-blue-600 font-semibold transition">
-        Home
-      </Link>
-      <Link to="/#companies" className="text-gray-700 hover:text-blue-600 font-semibold transition">
-        Companies
-      </Link>
-      <Link to="/blog" className="text-gray-700 hover:text-blue-600 font-semibold transition">
-        Blog
-      </Link>
-      <Link to="/contact" className="text-gray-700 hover:text-blue-600 font-semibold transition">
-        Contact
-      </Link>
       <Link to="/appraise" className="text-gray-700 hover:text-blue-600 font-semibold transition">
         ATS Analyzer
       </Link>
@@ -51,6 +39,10 @@ function Header() {
       <Link to="/collegehiring" className="text-gray-700 hover:text-blue-600 font-semibold transition">
         College Hiring
       </Link>
+      <Link to="/suggestions" className="text-gray-700 hover:text-blue-600 font-semibold transition">
+        Expert Suggestions
+      </Link>
+      {/* suggestions */}
         </nav>
 
         {/* Auth Buttons */}

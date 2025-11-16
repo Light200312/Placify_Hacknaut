@@ -1,20 +1,22 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { companies } from '../../data/companies';
+// --- REMOVED useAuth import ---
 
-function FeaturedCompanies() {
+function FeaturedCompanies() { // <-- Removed unused 'companyName' prop
   const navigate = useNavigate();
   const featuredCompanies = companies.slice(0, 6);
+  // --- REMOVED useAuth hook ---
 
   return (
     <div id="companies" className="py-20 bg-gray-50 transition-colors duration-300">
       <div className="container mx-auto px-6">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900  mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900  mb-4">
             Prepare for Top Companies 🏢
           </h2>
-          <p className="text-lg text-gray-600  max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600  max-w-2xl mx-auto">
             Practice with curated questions from your dream companies. Choose your target company and start your preparation journey.
           </p>
         </div>
@@ -25,10 +27,9 @@ function FeaturedCompanies() {
             <div
               key={company.id}
               className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 overflow-hidden cursor-pointer"
-              onClick={() => navigate(`/company/${company.id}`)}
             >
               {/* Company Header */}
-              <div className="h-32 bg-linear-to-br  flex items-center justify-center p-4">
+              <div className="h-32 bg-linear-to-br  flex items-center justify-center p-4">
                 <img
                   src={company.logo}
                   alt={company.name}
@@ -38,7 +39,7 @@ function FeaturedCompanies() {
 
               {/* Company Info */}
               <div className="p-6">
-                <h3 className="text-xl font-bold  text-black  mb-2">
+                <h3 className="text-xl font-bold  text-black  mb-2">
                   {company.name}
                 </h3>
 
@@ -54,11 +55,38 @@ function FeaturedCompanies() {
                     </div>
                   ))}
                 </div>
+               <div className="flex gap-3">
+  {/* Leetcode Button (Green) */}
+  <button
+    onClick={() => {
+      navigate(`/analysejob`, { state: { companyName: company.name } });
+    }}
+    className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all"
+  >
+    Leetcode →
+  </button>
+
+  {/* DB Question Button (Red) */}
+  <button
+    onClick={() => navigate(`/company/${company.id}`)}
+    className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all"
+  >
+    DB Questions
+  </button>
+</div>
+
 
                 {/* CTA Button */}
-                <button className="w-full py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all">
-                  Start Practice →
+                {/* <button
+                  // --- UPDATED onClick ---
+                  onClick={() => {
+                    navigate(`/analysejob`, { state: { companyName: company.name } });
+                  }}
+                  className="w-full py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all"
+                >
+                  Leetcode Questions →
                 </button>
+                <button onClick={()=>{navigate(`/company/${company.id}`)}}> DB Quiestion</button> */}
               </div>
             </div>
           ))}

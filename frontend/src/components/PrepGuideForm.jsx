@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import useAiStore from '../store/aiStore';
 import LoadingButton from './LoadingButton';
 
-const PrepGuideForm = () => {
-  const [company, setCompany] = useState('');
+const PrepGuideForm = ({companyName}) => {
+  const [company, setCompany] = useState(companyName || '');
   const [jobRole, setJobRole] = useState('');
   const [localError, setLocalError] = useState('');
 

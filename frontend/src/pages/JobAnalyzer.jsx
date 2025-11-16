@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom'; // <-- IMPORTED
 import Header from '../components2/Home/Header';
 import Footer from '../components2/Home/Footer';
 import ProfileForm from '../components/ProfileForm.jsx';
@@ -6,11 +7,14 @@ import AnalysisForm from '../components/AnalysisForm.jsx';
 import ResultsDisplay from '../components/ResultsDisplay.jsx';
 import PrepGuideForm from '../components/PrepGuideForm.jsx'; // New
 import PrepGuideDisplay from '../components/PrepGuideDisplay.jsx'; // New
+// --- REMOVED useAuth import ---
 
 export default function JobAnalyzer() {
-  // The profileId is needed by the AnalysisForm, so we lift state here.
-  // ProfileForm will call onProfileSave to set this ID.
   const [profileId, setProfileId] = useState('');
+
+  // --- ADDED useLocation hook to get state ---
+  const location = useLocation();
+  const companyName = location.state?.companyName; // Get companyName from state
 
   return (
     <div>
@@ -23,20 +27,22 @@ export default function JobAnalyzer() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* --- Left Column: Input Forms --- */}
-        <div className="lg:col-span-1 space-y-8">
-          {/* <ProfileForm onProfileSave={setProfileId} /> */}
-          {/* <AnalysisForm profileId={profileId} /> */}
-          <PrepGuideForm />
-        </div>
-        
-        {/* --- Right Column: Analysis Results --- */}
-        <div className="lg:col-span-2 space-y-8">
-          <PrepGuideDisplay />
-          {/* <ResultsDisplay /> */}
-        </div>
+          {/* --- Left Column: Input Forms --- */}
+          <div className="lg:col-span-1 space-y-8">
+            {/* <ProfileForm onProfileSave={setProfileId} /> */}
+            {/* <AnalysisForm profileId={profileId} /> */}
+            
+            {/* --- UPDATED: Prop now comes from location.state --- */}
+            <PrepGuideForm companyName={companyName} />
+          </div>
+          
+          {/* --- Right Column: Analysis Results --- */}
+          <div className="lg:col-span-2 space-y-8">
+            <PrepGuideDisplay />
+            {/* <ResultsDisplay /> */}
+          </div>
 
-      </div>
+        </div>
       </div>
       <Footer />
     </div>

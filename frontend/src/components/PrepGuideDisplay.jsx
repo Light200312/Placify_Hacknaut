@@ -146,7 +146,7 @@ const PrepGuideDisplay = () => {
 
       {/* --- Detailed Rounds Table (from screenshot) --- */}
       <div className="mb-8">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">Hiring Process & Rounds</h3>
+{/*         <h3 className="text-xl font-semibold text-gray-800 mb-4">Hiring Process & Rounds</h3> */}
          {/* Rounds Table */}
 
       <div className="mb-8">

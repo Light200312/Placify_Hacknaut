@@ -8,6 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(false);
+  // --- REMOVED companyName state ---
 
   // Load user from token
   useEffect(() => {
@@ -15,6 +16,8 @@ export const AuthProvider = ({ children }) => {
       fetchUser();
     }
   }, [token]);
+
+  // --- REMOVED setcompanyNames function ---
 
   const fetchUser = async () => {
     try {
@@ -92,6 +95,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
+    // --- REMOVED companyName from provider value ---
     <AuthContext.Provider value={{ user, token, loading, register, login, logout }}>
       {children}
     </AuthContext.Provider>

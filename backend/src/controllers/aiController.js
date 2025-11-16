@@ -227,7 +227,7 @@ Your response MUST be ONLY the valid JSON object. DO NOT include "json" or backt
 `;
 
 // --- NEW: System Prompt for Practice Questions ---
-const systemPromptPracticeQuestions = `You are a LeetCode-style problem generator. Your task is to create a list of practice questions for an Indian engineering student interviewing at a specific company.
+const systemPromptCodingQuestions = `You are a LeetCode-style problem generator. Your task is to create a list of practice questions for an Indian engineering student interviewing at a specific company.
 You will be given the company, the interview round, the desired difficulty, and the number of questions.
 You MUST return *only* a valid JSON object. Do not include "json" or backticks.
 The JSON MUST match this schema:
@@ -256,6 +256,196 @@ The JSON MUST match this schema:
 Generate *exactly* the number of questions requested.
 For the 'url', find a REAL LeetCode problem that matches the title and difficulty you generated.
 `;
+
+// --- **** MODIFICATION 2: NEW Prompt for Aptitude/Behavioral Questions **** ---
+const systemPromptAptitudeQuestions = `You are a test preparation expert. Your task is to generate a list of Multiple Choice Questions (MCQs) for an aptitude, behavioral, or cognitive test.
+You will be given the company, the interview round, the desired difficulty, and the number of questions.
+The questions should match the round type (e.g., 'Behavioral Assessment' -> psychometric questions, 'Cognitive Assessment' -> logic puzzles, 'Communication' -> grammar/reading).
+You MUST return *only* a valid JSON object. Do not include "json" or backticks.
+The JSON MUST match this schema:
+{
+  "type": "object",
+  "properties": {
+    "problems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "A unique ID, e.g., 'p1'" },
+          "title": { "type": "string", "description": "A very short title/category, e.g., 'Logical Reasoning' or 'Workplace Scenario'" },
+          "difficulty": { "type": "string", "description": "e.g., 'Easy', 'Medium', or 'Hard'" },
+          "questionText": { "type": "string", "description": "The full text of the question" },
+          "options": { "type": "array", "items": { "type": "string" }, "description": "An array of 4-5 option strings" },
+          "correctAnswer": { "type": "string", "description": "The exact string of the correct answer from the 'options' array" },
+          "explanation": { "type": "string", "description": "A brief explanation for why the answer is correct" }
+        },
+        "required": ["id", "title", "difficulty", "questionText", "options", "correctAnswer", "explanation"]
+      }
+    }
+  },
+  "required": ["problems"]
+}
+Generate *exactly* the number of questions requested.
+`;
+
+
+
+
+// --- **** MODIFICATION 3: Renamed to be specific to CODING **** ---
+/**
+ * Calls Gemini API to generate LeetCode-style CODING questions.
+ * Uses GEMINI_API_KEY2.
+ */
+export async function callGeminiCodingGenerator(company, round, difficulty, count) {
+  // Check if the correct API key is set
+  if (!GEMINI_API_KEY2) {
+    throw new Error('GEMINI_API_KEY2 is not set in environment variables.');
+  }
+
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY2}`;
+  
+  const userQuery = `
+    Company: "${company}"
+    Interview Round: "${round}"
+    Difficulty: "${difficulty}"
+    Number of Questions: ${count}
+    
+    Please generate the JSON output for CODING problems.
+  `;
+
+  const payload = {
+    contents: [{ parts: [{ text: userQuery }] }],
+    systemInstruction: {
+      parts: [{ text: systemPromptCodingQuestions }] // Use CODING prompt
+    },
+    generationConfig: {
+      temperature: 0.5,
+      responseMimeType: "application/json",
+    }
+  };
+
+  // Using Robustness Logic from your other functions
+  const maxRetries = 2;
+  const timeout = 60000; // 60 seconds
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, timeout);
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.error(`Question Generator Error (Attempt ${attempt}):`, errorBody);
+        throw new Error(`Question Generator API request failed with status ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.candidates && result.candidates[0]?.content?.parts[0]?.text) {
+        const textResponse = result.candidates[0].content.parts[0].text;
+        try {
+          return JSON.parse(textResponse);
+        } catch (parseError) {
+          console.error("Failed to parse JSON from AI response:", textResponse, parseError);
+          throw new Error("AI returned invalid JSON.");
+        }
+      } else {
+        console.error("Question Generator Invalid Response:", result);
+        throw new Error("Invalid response structure from Question Generator API");
+      }
+
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError' || error.code === 'ECONNRESET') {
+        console.error(`Question Generator request error (Attempt ${attempt}):`, error.message);
+        if (attempt === maxRetries) {
+          throw new Error(`Question Generator request failed after ${maxRetries} attempts.`);
+        }
+      } else {
+        throw error; // Non-retryable error
+      }
+    }
+  }
+}
+
+
+// --- **** MODIFICATION 4: NEW Function for Aptitude Questions **** ---
+/**
+ * Calls Gemini API to generate APTITUDE/MCQ questions.
+ */
+export async function callGeminiAptitudeGenerator(company, round, difficulty, count) {
+  if (!GEMINI_API_KEY2) { 
+    throw new Error('GEMINI_API_KEY2 is not set in environment variables.');
+  }
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY2}`;
+  const userQuery = `
+    Company: "${company}"
+    Interview Round: "${round}" 
+    Difficulty: "${difficulty}"
+    Number of Questions: ${count}
+    Please generate the JSON output for APTITUDE/MCQ problems.
+  `;
+  const payload = {
+    contents: [{ parts: [{ text: userQuery }] }],
+    systemInstruction: {
+      parts: [{ text: systemPromptAptitudeQuestions }] // Use APTITUDE prompt
+    },
+    generationConfig: {
+      temperature: 0.5,
+      responseMimeType: "application/json",
+    }
+  };
+
+  const maxRetries = 2;
+  const timeout = 60000;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.error(`Gemini Aptitude Error (Attempt ${attempt}):`, errorBody);
+        throw new Error(`Gemini Aptitude API request failed with status ${response.status}`);
+      }
+      const result = await response.json();
+      if (result.candidates && result.candidates[0]?.content?.parts[0]?.text) {
+        return JSON.parse(result.candidates[0].content.parts[0].text);
+      } else {
+        console.error("Gemini Aptitude Invalid Response:", result);
+        throw new Error("Invalid response structure from Gemini Aptitude API");
+      }
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError' || error.code === 'ECONNRESET') {
+        console.error(`Gemini Aptitude request error (Attempt ${attempt}):`, error.message);
+        if (attempt === maxRetries) {
+          throw new Error(`Gemini Aptitude request failed after ${maxRetries} attempts.`);
+        }
+      } else {
+        throw error;
+      }
+    }
+  }
+}
 
 // --- AI API Helper Functions ---
 
