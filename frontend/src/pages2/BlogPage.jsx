@@ -37,7 +37,7 @@ function BlogPage() {
       <div>
         <Header />
         <div className="container mx-auto px-6 py-12 text-center">
-          <p className="text-gray-600 text-lg">Loading blogs...</p>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">Loading blogs...</p>
         </div>
         <Footer />
       </div>
@@ -45,10 +45,10 @@ function BlogPage() {
   }
 
   return (
-    <div>
+    <div className="bg-white dark:bg-gray-950 transition-colors duration-300">
       <Header />
 
-      <div className="bg-linear-to-r from-blue-600 to-indigo-600 text-white py-12">
+      <div className="bg-linear-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-900 text-white py-12 transition-colors duration-300">
         <div className="container mx-auto px-6 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Placement Blog 📚</h1>
           <p className="text-lg text-blue-100">Tips, tricks, and insights for placement success</p>
@@ -63,7 +63,7 @@ function BlogPage() {
             placeholder="Search articles..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-6 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+            className="w-full px-6 py-3 border-2 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:border-blue-500 transition-colors duration-300"
           />
         </div>
 
@@ -74,26 +74,26 @@ function BlogPage() {
               <div
                 key={blog._id}
                 onClick={() => navigate(`/blog/${blog._id}`)}
-                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all transform hover:scale-105 cursor-pointer overflow-hidden"
+                className="bg-white dark:bg-gray-900 rounded-xl shadow-md hover:shadow-xl transition-all transform hover:scale-105 cursor-pointer overflow-hidden"
               >
-                <div className="h-40 bg-linear-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+                <div className="h-40 bg-linear-to-br from-blue-400 to-indigo-500 dark:from-blue-600 dark:to-indigo-700 flex items-center justify-center">
                   <span className="text-5xl">📝</span>
                 </div>
                 <div className="p-6">
                   <div className="flex gap-2 mb-3">
                     {blog.tags?.slice(0, 2).map((tag, idx) => (
-                      <span key={idx} className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
+                      <span key={idx} className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 px-3 py-1 rounded-full">
                         {tag}
                       </span>
                     ))}
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                     {blog.title}
                   </h3>
-                  <p className="text-gray-600 text-sm mb-4">
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
                     {blog.excerpt}
                   </p>
-                  <div className="flex justify-between items-center text-sm text-gray-500">
+                  <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
                     <span>👁️ {blog.views} views</span>
                     <span>Read More →</span>
                   </div>

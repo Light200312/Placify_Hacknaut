@@ -47,10 +47,10 @@ function ContactPage() {
   };
 
   return (
-    <div>
+    <div className="bg-white dark:bg-gray-950 transition-colors duration-300">
       <Header />
 
-      <div className="bg-linear-to-r from-blue-600 to-indigo-600 text-white py-12">
+      <div className="bg-linear-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-900 text-white py-12 transition-colors duration-300">
         <div className="container mx-auto px-6 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Get In Touch 💬</h1>
           <p className="text-lg text-blue-100">Have questions? We'd love to hear from you!</p>
@@ -60,17 +60,17 @@ function ContactPage() {
       <div className="container mx-auto px-6 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Contact Form */}
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Send us a message</h2>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 transition-colors duration-300">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Send us a message</h2>
 
             {submitted && (
-              <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+              <div className="mb-6 p-4 bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-600 text-green-700 dark:text-green-200 rounded-lg">
                 ✓ Thank you! We've received your message and will get back to you soon.
               </div>
             )}
 
             {error && (
-              <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+              <div className="mb-6 p-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-200 rounded-lg">
                 {error}
               </div>
             )}
@@ -78,7 +78,7 @@ function ContactPage() {
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Name */}
               <div>
-                <label className="block text-gray-700 font-semibold mb-2">Full Name *</label>
+                <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Full Name *</label>
                 <input
                   type="text"
                   name="name"
@@ -86,13 +86,13 @@ function ContactPage() {
                   onChange={handleChange}
                   required
                   placeholder="Your name"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:border-blue-500 transition"
                 />
               </div>
 
               {/* Email */}
               <div>
-                <label className="block text-gray-700 font-semibold mb-2">Email Address *</label>
+                <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Email Address *</label>
                 <input
                   type="email"
                   name="email"
@@ -100,13 +100,13 @@ function ContactPage() {
                   onChange={handleChange}
                   required
                   placeholder="your@email.com"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:border-blue-500 transition"
                 />
               </div>
 
               {/* Subject */}
               <div>
-                <label className="block text-gray-700 font-semibold mb-2">Subject *</label>
+                <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Subject *</label>
                 <input
                   type="text"
                   name="subject"
@@ -114,13 +114,13 @@ function ContactPage() {
                   onChange={handleChange}
                   required
                   placeholder="How can we help?"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:border-blue-500 transition"
                 />
               </div>
 
               {/* Message */}
               <div>
-                <label className="block text-gray-700 font-semibold mb-2">Message *</label>
+                <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Message *</label>
                 <textarea
                   name="message"
                   value={formData.message}
@@ -128,7 +128,7 @@ function ContactPage() {
                   required
                   rows="6"
                   placeholder="Tell us what's on your mind..."
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition resize-none"
+                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:border-blue-500 transition resize-none"
                 ></textarea>
               </div>
 
@@ -136,7 +136,7 @@ function ContactPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition transform hover:scale-105 disabled:opacity-50"
+                className="w-full py-3 bg-blue-600 dark:bg-blue-700 text-white font-bold rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition transform hover:scale-105 disabled:opacity-50"
               >
                 {loading ? 'Sending...' : 'Send Message'}
               </button>

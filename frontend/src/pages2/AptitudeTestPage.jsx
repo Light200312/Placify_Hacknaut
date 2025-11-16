@@ -73,7 +73,10 @@ function AptitudeTestPage() {
 
   const handleStartTest = (data) => {
     setUserInfo(data);
-    setHasStarted(true);
+    // Auto-redirect to test after credentials are filled
+    setTimeout(() => {
+      setHasStarted(true);
+    }, 300);
   };
 
   const handleAnswerChange = (questionId, selectedOption) => {

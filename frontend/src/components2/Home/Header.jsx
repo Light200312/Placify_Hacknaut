@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 function Header() {
@@ -27,27 +27,30 @@ function Header() {
 
         {/* Navigation */}
         <nav className="hidden md:flex gap-8 items-center">
-          <a href="/" className="text-gray-700 hover:text-blue-600 font-semibold transition">
-            Home
-          </a>
-          <a href="/#companies" className="text-gray-700 hover:text-blue-600 font-semibold transition">
-            Companies
-          </a>
-          <a href="/blog" className="text-gray-700 hover:text-blue-600 font-semibold transition">
-            Blog
-          </a>
-          <a href="/contact" className="text-gray-700 hover:text-blue-600 font-semibold transition">
-            Contact
-          </a>
-          <a href="/appraise" className="text-gray-700 hover:text-blue-600 font-semibold transition">
-            ATS Analyzer
-          </a>
-          <a href="/analysejob" className="text-gray-700 hover:text-blue-600 font-semibold transition">
-            Job Analysis
-          </a>
-          <a href="/jobposts" className="text-gray-700 hover:text-blue-600 font-semibold transition">
-            Job Board
-          </a>
+         <Link to="/" className="text-gray-700 hover:text-blue-600 font-semibold transition">
+        Home
+      </Link>
+      <Link to="/#companies" className="text-gray-700 hover:text-blue-600 font-semibold transition">
+        Companies
+      </Link>
+      <Link to="/blog" className="text-gray-700 hover:text-blue-600 font-semibold transition">
+        Blog
+      </Link>
+      <Link to="/contact" className="text-gray-700 hover:text-blue-600 font-semibold transition">
+        Contact
+      </Link>
+      <Link to="/appraise" className="text-gray-700 hover:text-blue-600 font-semibold transition">
+        ATS Analyzer
+      </Link>
+      <Link to="/analysejob" className="text-gray-700 hover:text-blue-600 font-semibold transition">
+        Job Analysis
+      </Link>
+      <Link to="/jobposts" className="text-gray-700 hover:text-blue-600 font-semibold transition">
+        Job Board
+      </Link>
+      <Link to="/collegehiring" className="text-gray-700 hover:text-blue-600 font-semibold transition">
+        College Hiring
+      </Link>
         </nav>
 
         {/* Auth Buttons */}

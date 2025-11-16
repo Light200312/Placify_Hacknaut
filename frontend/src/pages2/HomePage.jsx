@@ -10,7 +10,7 @@ import Footer from '../components2/Home/Footer';
 
 function HomePage() {
   return (
-    <div className="bg-white">
+    <div className="bg-white dark:bg-gray-950 transition-colors duration-300">
       <Header />
       <HeroSection />
       <FeaturedCompanies />

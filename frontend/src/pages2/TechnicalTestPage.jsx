@@ -1,131 +1,197 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import CodeEditor from "../components2/CodeEditor";
-import CodeCompiler from "../components2/CodeCompiler";
-import useTimer from "../hooks/useTimer";
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import CodeEditor from '../components2/CodeEditor';
+import CodeCompiler from '../components2/CodeCompiler';
+import useTimer from '../hooks/useTimer';
+import { technicalQuestions } from '../data/technicalQuestions';
+import { companies } from '../data/companies';
+import axios from 'axios';
+import ReactMarkdown from 'react-markdown'; 
 
-const CODING_TEST_DURATION_MINS = 30;
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const CODING_TEST_DURATION_MINS = 60;
 
-function TechnicalTestPage() {
-  const { companyName } = useParams();
-  const navigate = useNavigate();
-  const { token } = useAuth();
+// ----------------------------------------------------------------------
+// QuestionInterface Component
+// ----------------------------------------------------------------------
+function QuestionInterface({ question, onSubmit }) {
+  const [selectedLanguage, setSelectedLanguage] = useState('javascript');
+  const [userCode, setUserCode] = useState('');
+  
+  const [loadingSolution, setLoadingSolution] = useState(false);
+  const [solutionError, setSolutionError] = useState('');
+  const [explanationCards, setExplanationCards] = useState([]);
 
-  const [questions, setQuestions] = useState([]);
-  const [currentQIndex, setCurrentQIndex] = useState(0);
-  const [selectedLanguage, setSelectedLanguage] = useState("javascript");
-  const [userCode, setUserCode] = useState("");
-  const [userAnswers, setUserAnswers] = useState({});
-  const [loading, setLoading] = useState(true);
+  // --- REMOVED ---
+  // const [executeSignal, setExecuteSignal] = useState(0);
 
-  const currentQuestion = questions[currentQIndex];
-
-  const handleSubmitTest = () => {
-    stopTimer();
-
-    const resultData = { userAnswers, questions, userInfo: { name: 'User' } };
-    localStorage.setItem(`result_${companyName}_technical`, JSON.stringify(resultData));
-
-    navigate(`/results/${companyName}/technical`, {
-      state: resultData,
-      replace: true,
-    });
-  };
-
-  const { timeLeft, formattedTime, startTimer, stopTimer, resetTimer } = useTimer(
-    CODING_TEST_DURATION_MINS * 60,
-    handleSubmitTest
-  );
-
-  // Fetch questions from backend
+  // Effect to set starter code when the question or language changes
   useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const response = await fetch(
-          `${API_URL}/questions/${companyName}/technical`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setQuestions(data);
-          if (data.length > 0) {
-            setUserCode(data[0].starterCode || "// Start coding here...");
-          }
-        } else {
-          console.error("Failed to fetch questions");
-        }
-      } catch (error) {
-        console.error("Error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchQuestions();
-  }, [companyName, token]);
-
-  // Start timer
-  useEffect(() => {
-    if (!loading && questions.length > 0) {
-      startTimer();
-    }
-    return () => stopTimer();
-  }, [loading, questions.length]);
-
-  if (loading) {
-    return <div className="text-center py-12 text-gray-600">Loading questions...</div>;
-  }
-
-  if (questions.length === 0) {
-    return (
-      <div className="container mx-auto p-6 text-center mt-10 text-red-600 text-lg">
-        ⚠️ No technical questions available for {companyName}.
-      </div>
+    setUserCode(
+      question.starterCode?.[selectedLanguage] || '// Start coding here...'
     );
-  }
+    setSolutionError('');
+    setExplanationCards([]); 
+  }, [question, selectedLanguage]);
 
-  const handleNextQuestion = () => {
-    if (currentQIndex < questions.length - 1) {
-      setCurrentQIndex((prev) => prev + 1);
-      setUserCode("");
+  // Updated fetchSolution
+  const fetchSolution = async () => {
+    setLoadingSolution(true);
+    setSolutionError('');
+    setExplanationCards([]); 
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/solution/generate', {
+        questionTitle: question.title,
+        questionProblem: question.problem,
+        language: selectedLanguage,
+      });
+
+      const data = response.data;
+
+      if (data.success && data.solution) {
+        
+        const solutionText = data.solution;
+        
+        let code = '';
+        let explanation = '';
+
+        if (solutionText.includes('CODE_EXPLANATION_START')) {
+          const parts = solutionText.split('CODE_EXPLANATION_START');
+          code = parts[0].replace('CODE_SOLUTION_START', '').trim();
+          explanation = parts[1].trim();
+        } else {
+          code = solutionText.replace(/^```[a-z]*\n?/, '').replace(/\n?```$/, '');
+          explanation = '### ⚠️ Error\nAI failed to provide a separate explanation. The code has been placed in the editor.';
+        }
+        
+        // Set the code directly into the editor
+        setUserCode(code);
+        
+        if (explanation) {
+          const cardStrings = explanation.split(/###\s+/).filter(Boolean);
+          const cards = cardStrings.map(cardText => {
+            const parts = cardText.split('\n');
+            const title = parts[0].trim();
+            const content = parts.slice(1).join('\n').trim();
+            return { title, content };
+          });
+          setExplanationCards(cards);
+        }
+
+        // --- REMOVED ---
+        // setExecuteSignal(prevCount => prevCount + 1);
+        
+      } else {
+        setSolutionError(data.message || 'Failed to generate a valid solution.');
+      }
+
+    } catch (err) { 
+      if (err.response && err.response.data && err.response.data.message) {
+        setSolutionError(err.response.data.message);
+      } else {
+        setSolutionError('Error fetching solution: ' + err.message);
+      }
+    } finally {
+      setLoadingSolution(false);
     }
   };
 
-  const handlePreviousQuestion = () => {
-    if (currentQIndex > 0) {
-      setCurrentQIndex((prev) => prev - 1);
-      setUserCode("");
-    }
-  };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold text-center my-6 text-gray-800">
-        {companyName.toUpperCase()} Technical Round ({currentQIndex + 1} of{" "}
-        {questions.length})
-      </h1>
-
-      {/* Timer and Language */}
-      <div className="flex justify-between items-center mb-6 bg-gray-100 p-4 rounded-md shadow-sm">
-        <div className="text-lg">
-          Time Left:{" "}
-          <span className="font-semibold text-red-600">
-            {formattedTime}
-          </span>
+    <div className="space-y-4">
+      {/* Problem Statement */}
+      <div className="bg-gray-900 rounded-lg border border-gray-700 p-6">
+        {/* ... (Problem statement header) ... */}
+        <div className="flex justify-between items-start mb-4">
+          <h2 className="text-2xl font-bold text-white">{question.title}</h2>
+          <button
+            onClick={fetchSolution}
+            disabled={loadingSolution}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded font-semibold text-sm"
+          >
+            {loadingSolution ? '⏳ Loading...' : '👁️ See Solution'}
+          </button>
         </div>
-        <div>
-          <label htmlFor="language" className="mr-2 font-medium">
-            Language:
-          </label>
+        
+        {/* ... (Error and Explanation Card sections) ... */}
+        {solutionError && (
+          <div className="mb-4 p-3 bg-red-900 border border-red-700 rounded text-red-200">
+            ⚠️ {solutionError}
+          </div>
+        )}
+        
+        {explanationCards.length > 0 && (
+          <div className="space-y-4 mb-6">
+            <h3 className="text-xl font-bold text-blue-200">
+              💡 AI Solution Explanation
+            </h3>
+            <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+              <h4 className="text-md font-bold text-gray-300 mb-2">
+                Problem Recap
+              </h4>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                {question.problem}
+              </p>
+            </div>
+            
+            {explanationCards.map((card, index) => (
+              <div 
+                key={index} 
+                className="bg-gray-800 border border-gray-700 rounded-lg p-4"
+              >
+                <h4 className="text-md font-bold text-blue-300 mb-2">
+                  {card.title}
+                </h4>
+                <div className="prose prose-invert prose-sm max-w-none">
+                  <ReactMarkdown>{card.content}</ReactMarkdown>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {explanationCards.length === 0 && (
+          <p className="text-gray-300 mb-4 leading-relaxed">
+            {question.problem}
+          </p>
+        )}
+
+        {/* ... (Example and Difficulty) ... */}
+        {question.exampleInput && (
+          <div className="space-y-2 mb-4">
+            <p className="font-bold text-gray-200">Example:</p>
+            <p className="text-gray-400">
+              <strong>Input:</strong> {question.exampleInput}
+            </p>
+            <p className="text-gray-400">
+              <strong>Output:</strong> {question.exampleOutput}
+            </p>
+          </div>
+        )}
+
+        <span
+          className={`inline-block px-3 py-1 rounded text-white font-semibold ${
+            question.difficulty === 'Easy'
+              ? 'bg-green-600'
+              : question.difficulty === 'Medium'
+              ? 'bg-yellow-600'
+              : 'bg-red-600'
+          }`}
+        >
+          {question.difficulty}
+        </span>
+      </div>
+
+      {/* Code Editor */}
+      <div className="bg-gray-900 rounded-lg border border-gray-700 p-4">
+        {/* ... (Editor header) ... */}
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-bold">📝 Code Editor</h3>
           <select
-            id="language"
             value={selectedLanguage}
             onChange={(e) => setSelectedLanguage(e.target.value)}
-            className="p-2 border rounded-md"
+            className="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white focus:outline-none"
           >
             <option value="javascript">JavaScript</option>
             <option value="python">Python</option>
@@ -134,67 +200,339 @@ function TechnicalTestPage() {
             <option value="c">C</option>
           </select>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Problem Statement */}
-        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-          <h2 className="text-2xl font-bold mb-4 text-gray-900">
-            {currentQuestion.question}
-          </h2>
-          <p className="text-gray-700 mb-4 leading-relaxed">
-            Write a program to solve this problem.
-          </p>
-          <p className="font-bold text-gray-800 mb-2">Difficulty:</p>
-          <span className={`px-3 py-1 rounded text-white font-semibold ${currentQuestion.difficulty === 'easy' ? 'bg-green-600' :
-              currentQuestion.difficulty === 'medium' ? 'bg-yellow-600' :
-                'bg-red-600'
-            }`}>
-            {currentQuestion.difficulty?.toUpperCase()}
-          </span>
-        </div>
-
-        {/* Code Editor */}
-        <div>
-          <CodeEditor
-            code={userCode}
-            language={selectedLanguage}
-            onChange={setUserCode}
-          />
-        </div>
+        <CodeEditor
+          code={userCode}
+          language={selectedLanguage}
+          onChange={setUserCode}
+        />
       </div>
 
       {/* Code Compiler */}
-      <div className="mt-6">
-        <h3 className="text-xl font-bold mb-3">Compiler & Output</h3>
-        <CodeCompiler code={userCode} language={selectedLanguage} />
+      <div className="bg-gray-900 rounded-lg border border-gray-700 p-4">
+        <h3 className="text-lg font-bold mb-4">⚙️ Compiler & Output</h3>
+        
+        {/* --- MODIFIED --- */}
+        <CodeCompiler 
+          code={userCode} 
+          language={selectedLanguage}
+          // executeSignal prop is removed
+        />
       </div>
 
-      {/* Navigation Buttons */}
-      <div className="flex justify-between mt-6">
-        <button
-          onClick={handlePreviousQuestion}
-          disabled={currentQIndex === 0}
-          className="px-6 py-3 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 disabled:opacity-50 transition font-semibold"
-        >
-          Previous
-        </button>
+      {/* Submit Button */}
+      <button
+        onClick={() => onSubmit(userCode, selectedLanguage)} 
+        className="w-full py-3 bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 font-bold rounded-lg transition text-white"
+      >
+        ✅ Submit Solution
+      </button>
+    </div>
+  );
+}
 
-        {currentQIndex < questions.length - 1 ? (
+// ----------------------------------------------------------------------
+// Main Component (No changes below this line)
+// ----------------------------------------------------------------------
+function TechnicalTestPage() {
+  // ... (This entire component is unchanged from your last version)
+  const { companyName } = useParams();
+  const navigate = useNavigate();
+  const { user, token } = useAuth();
+  const [testStarted, setTestStarted] = useState(false);
+  const [currentQIndex, setCurrentQIndex] = useState(0);
+  const [submittedAnswers, setSubmittedAnswers] = useState({});
+  const [showResults, setShowResults] = useState(false);
+  const company = companies.find((c) => c.id === companyName);
+  const relevantQuestions = technicalQuestions.filter(
+    (q) => q.company === companyName && q.round === 'technical'
+  );
+  const currentQuestion = relevantQuestions[currentQIndex];
+
+  const handleSubmitTest = useCallback(() => {
+    // ...
+    const resultData = {
+      submittedAnswers,
+      questions: relevantQuestions,
+      userInfo: { name: user?.name || 'User', email: user?.email },
+    };
+    const storageKey = `result_${companyName}_technical`;
+    localStorage.setItem(storageKey, JSON.stringify(resultData));
+    setShowResults(true);
+  }, [companyName, submittedAnswers, relevantQuestions, user]);
+
+  const { timeLeft, formattedTime, startTimer, stopTimer, resetTimer } =
+    useTimer(CODING_TEST_DURATION_MINS * 60, handleSubmitTest);
+
+  useEffect(() => {
+    if (testStarted && !showResults) {
+      startTimer();
+    } else {
+      stopTimer();
+    }
+    return () => stopTimer();
+  }, [testStarted, showResults, startTimer, stopTimer]);
+
+  const handleStartTest = useCallback(() => {
+    setTestStarted(true);
+  }, []);
+
+  const handleSubmitSolution = useCallback((code, language) => {
+    if (!currentQuestion) return; 
+    setSubmittedAnswers((prev) => ({
+      ...prev,
+      [currentQuestion.id]: {
+        code: code,
+        language: language,
+        submittedAt: new Date(),
+      },
+    }));
+    if (currentQIndex < relevantQuestions.length - 1) {
+      setCurrentQIndex(currentQIndex + 1);
+    } else {
+      setShowResults(true);
+    }
+  }, [currentQIndex, currentQuestion, relevantQuestions.length]);
+
+  const handleNextQuestion = useCallback(() => {
+    if (currentQIndex < relevantQuestions.length - 1) {
+      setCurrentQIndex((prev) => prev + 1);
+    }
+  }, [currentQIndex, relevantQuestions.length]);
+
+  const handlePreviousQuestion = useCallback(() => {
+    if (currentQIndex > 0) {
+      setCurrentQIndex((prev) => prev - 1);
+    }
+  }, [currentQIndex]);
+
+  const handleFinishTest = useCallback(() => {
+    setShowResults(true);
+  }, []);
+
+  if (!user || !token) {
+    navigate('/signin');
+    return null;
+  }
+  if (!company) {
+    return (
+      <div className="text-center mt-10 text-red-600 text-lg">
+        Company or Technical test not found!
+      </div>
+    );
+  }
+  if (relevantQuestions.length === 0) {
+    return (
+      <div className="text-center mt-10 text-red-600 text-lg">
+        No technical questions available for {company.name}.
+      </div>
+    );
+  }
+  if (!currentQuestion) {
+    return (
+       <div className="text-center mt-10 text-yellow-500 text-lg">
+        Loading question...
+       </div>
+    );
+  }
+  if (showResults) {
+    // ... (Results screen JSX)
+    const solvedCount = Object.keys(submittedAnswers).length;
+    return (
+      <div className="min-h-screen bg-linear-to-br from-gray-950 via-gray-900 to-gray-800 text-white p-6">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-linear-to-br from-gray-900 to-gray-800 rounded-lg p-8 border border-gray-700 shadow-xl text-center">
+            <h1 className="text-4xl font-bold mb-4">🎉 Test Completed!</h1>
+            <div className="text-6xl font-bold mb-2 text-blue-400">
+              {solvedCount}/{relevantQuestions.length}
+            </div>
+            <p className="text-xl text-gray-300 mb-6">
+              You submitted solutions for {solvedCount} out of{' '}
+              {relevantQuestions.length} problems
+            </p>
+
+            <div className="bg-gray-900 rounded-lg p-6 mb-6 border border-gray-700">
+              <h2 className="text-lg font-semibold mb-4">📊 Your Submissions</h2>
+              <div className="space-y-2">
+                {relevantQuestions.map((q) => (
+                  <div
+                    key={q.id}
+                    className="flex items-center justify-between p-3 bg-gray-800 rounded"
+                  >
+                    <span className="font-semibold">{q.title}</span>
+                    {submittedAnswers[q.id] ? (
+                      <span className="text-green-400 font-bold">
+                        ✅ Submitted
+                      </span>
+                    ) : (
+                      <span className="text-red-400 font-bold">
+                        ❌ Not Attempted
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setTestStarted(false);
+                  setShowResults(false);
+                  setCurrentQIndex(0);
+                  setSubmittedAnswers({});
+                  resetTimer();
+                }}
+                className="flex-1 py-3 bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 font-bold rounded-lg transition"
+              >
+                🔄 Retake Test
+              </button>
+              <button
+                onClick={() => navigate('/home')}
+                className="flex-1 py-3 bg-linear-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 font-bold rounded-lg transition"
+              >
+                🏠 Back to Home
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (!testStarted) {
+    // ... (Instructions screen JSX)
+    return (
+      <div className="min-h-screen bg-linear-to-br from-gray-950 via-gray-900 to-gray-800 text-white p-6">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-linear-to-br from-gray-900 to-gray-800 rounded-lg p-8 border border-gray-700 shadow-xl">
+            <h1 className="text-4xl font-bold mb-6">
+              💻 Technical Coding Round
+            </h1>
+
+            <div className="bg-gray-900 rounded-lg p-6 mb-6 border border-gray-700 space-y-4">
+              {/* ... (details, instructions, languages) ... */}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => navigate('/home')}
+                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 font-bold rounded-lg transition"
+              >
+                ← Back
+              </button>
+              <button
+                onClick={handleStartTest}
+                className="flex-1 py-3 bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 font-bold rounded-lg transition transform hover:scale-105"
+              >
+                🚀 Start Test
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return (
+    // ... (Main test screen JSX)
+    <div className="min-h-screen bg-linear-to-br from-gray-950 via-gray-900 to-gray-800 text-white p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6 bg-gray-900 p-4 rounded-lg border border-gray-700">
+          <div>
+            <h1 className="text-2xl font-bold">💻 Technical Round</h1>
+            <p className="text-gray-400">
+              Question {currentQIndex + 1} of {relevantQuestions.length}
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div
+              className={`text-3xl font-bold px-4 py-2 rounded-lg ${
+                timeLeft > 600 ? 'bg-blue-900' : 'bg-red-900'
+              }`}
+            >
+              ⏱ {formattedTime}
+            </div>
+            <div className="text-sm text-gray-400">
+              Submitted: {Object.keys(submittedAnswers).length}/
+              {relevantQuestions.length}
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Sidebar - Questions List */}
+          <div className="lg:col-span-1">
+            <div className="bg-gray-900 rounded-lg border border-gray-700 p-4 sticky top-6">
+              <h2 className="text-lg font-bold mb-4">📚 Questions</h2>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {relevantQuestions.map((q, idx) => (
+                  <button
+                    key={q.id}
+                    onClick={() => setCurrentQIndex(idx)}
+                    className={`w-full text-left p-3 rounded-lg transition border ${
+                      idx === currentQIndex
+                        ? 'bg-blue-900 border-blue-700'
+                        : 'bg-gray-800 border-gray-700 hover:bg-gray-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-sm">{q.title}</span>
+                      {submittedAnswers[q.id] ? (
+                        <span className="text-green-400 text-lg">✅</span>
+                      ) : (
+                        <span className="text-gray-500 text-lg">○</span>
+                      )}
+                    </div>
+                    <span
+                      className={`text-xs ${
+                        q.difficulty === 'Easy'
+                          ? 'text-green-400'
+                          : q.difficulty === 'Medium'
+                          ? 'text-yellow-400'
+                          : 'text-red-400'
+                      }`}
+                    >
+                      {q.difficulty}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content - Question, Editor and Compiler */}
+          <div className="lg:col-span-2">
+            <QuestionInterface
+              key={currentQuestion.id}
+              question={currentQuestion}
+              onSubmit={handleSubmitSolution}
+            />
+          </div>
+        </div>
+
+        {/* Bottom Navigation */}
+        <div className="mt-6 flex gap-3 justify-between">
+          <button
+            onClick={handlePreviousQuestion}
+            disabled={currentQIndex === 0}
+            className="px-6 py-3 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 font-bold rounded-lg transition"
+          >
+            ← Previous
+          </button>
+          <button
+            onClick={handleFinishTest}
+            className="px-6 py-3 bg-linear-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 font-bold rounded-lg transition"
+          >
+            🏁 Finish Test
+          </button>
           <button
             onClick={handleNextQuestion}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+            disabled={currentQIndex === relevantQuestions.length - 1}
+            className="px-6 py-3 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 font-bold rounded-lg transition"
           >
-            Next
+            Next →
           </button>
-        ) : (
-          <button
-            onClick={handleSubmitTest}
-            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
-          >
-            Submit Test
-          </button>
-        )}
+        </div>
       </div>
     </div>
   );

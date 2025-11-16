@@ -1,9 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 function AptitudeEntryForm({ onStart }) {
+  const { user } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [college, setCollege] = useState('');
+
+  // Pre-fill with authenticated user data
+  useEffect(() => {
+    if (user) {
+      setName(user.name || '');
+      setEmail(user.email || '');
+      setCollege(user.college || '');
+    }
+  }, [user]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

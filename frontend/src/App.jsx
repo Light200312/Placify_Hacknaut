@@ -11,7 +11,7 @@ import BlogDetailPage from './pages2/BlogDetailPage';
 import ContactPage from './pages2/ContactPage';
 import LoginPage from './pages2/Auth/LoginPage';
 import SignupPage from './pages2/Auth/SignupPage';
-
+import CollegeHiring from './pages/CollegeHiring';
 // Old pages (for compatibility)
 import OldHomePage from './pages/HomePage.jsx';
 import JobAnalyzer from './pages/JobAnalyzer.jsx';
@@ -51,6 +51,7 @@ function App() {
       <Route path="/appraise" element={<OldHomePage />} />
       <Route path="/analysejob" element={<JobAnalyzer />} />
       <Route path="/jobposts" element={<JobPost />} />
+      <Route path="/collegehiring" element={<CollegeHiring />} />
 
       {/* 404 Not Found */}
       <Route path="*" element={<div className="min-h-screen flex items-center justify-center"><div className="text-center text-red-600 text-2xl font-bold">404 - Page Not Found</div></div>} />
