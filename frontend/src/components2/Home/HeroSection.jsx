@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-function HeroSection() {
+function HeroSection({ onStartPreparation, onLearnMore }) {
   const navigate = useNavigate();
 
   return (
@@ -26,19 +26,22 @@ function HeroSection() {
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <button
-              onClick={() => navigate('/#companies')}
-              className="px-8 py-4 bg-white text-blue-700 rounded-lg font-bold text-lg hover:bg-blue-50 transition-all transform hover:scale-105 shadow-lg"
-            >
-              Start Preparation 🚀
-            </button>
-            <button
-              className="px-8 py-4 bg-blue-500 text-white rounded-lg font-bold text-lg border-2 border-white hover:bg-blue-600 transition-all"
-            >
-              Learn More →
-            </button>
-          </div>
+   <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+  <button
+    onClick={onStartPreparation}
+    className="px-8 py-4 bg-white text-blue-700 rounded-lg font-bold text-lg hover:bg-blue-50 transition-all transform hover:scale-105 shadow-lg"
+  >
+    Start Preparation 🚀
+  </button>
+
+  <button
+    onClick={onLearnMore}
+    className="px-8 py-4 bg-blue-500 text-white rounded-lg font-bold text-lg border-2 border-white hover:bg-blue-600 transition-all"
+  >
+    Learn More →
+  </button>
+</div>
+
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-6 mt-12 text-center">

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import Header from '../components2/Home/Header'; // Adjust path as needed
 import Footer from '../components2/Home/Footer'; // Adjust path as needed
+import { useAuth } from '../context/AuthContext';
 
 // This is the structured schema guide for the user
 const schemaExample = `// Structure for custom questions database upload
@@ -34,13 +35,18 @@ const schemaExample = `// Structure for custom questions database upload
 }`;
 
 const UploadDataPage = () => {
-  const [collegeName, setCollegeName] = useState('');
-  const [file, setFile] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ text: '', isError: false });
+  const [collegeName, setCollegeName] = useState('');
+  const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ text: '', isError: false });
   const [isDragActive, setIsDragActive] = useState(false); // New state for visual feedback
+  const { user } = useAuth();
 
-  const handleFileChange = (e) => {
+  // Check if user is authorized
+  const ALLOWED_EMAIL = 'roshan20031112@gmail.com';
+  const isAuthorized = user?.email === ALLOWED_EMAIL;
+
+  const handleFileChange = (e) => {
     // We only accept PDF for the AI Vision pipeline
     const selectedFile = e.target.files?.[0];
     if (selectedFile && selectedFile.type === 'application/pdf') {
@@ -121,45 +127,56 @@ const UploadDataPage = () => {
     <div className="min-h-screen bg-gray-100">
       <Header />
       <div className="container mx-auto max-w-4xl p-6">
-        <div className="bg-white rounded-lg shadow-xl p-8">
-          
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">Upload Placement Data</h1>
-          <p className="text-gray-600 mb-6">
-            Upload a **clean, structured PDF** containing your college's placement questions. Our AI will parse and save them to your custom database.
-          </p>
+        <div className="bg-white rounded-lg shadow-xl p-8">
+          
+          <h1 className="text-3xl font-bold text-gray-800 mb-4">Upload Placement Data</h1>
+          
+          {/* Authorization Check */}
+          {!isAuthorized && (
+            <div className="mb-6 p-4 bg-red-100 border-l-4 border-red-600 text-red-700 rounded-lg">
+              <p className="font-semibold">❌ Access Denied</p>
+              <p className="text-sm mt-1">You are not authorized to upload data. Only the admin account can upload placement data.</p>
+              <p className="text-sm mt-2 text-red-600">Current Email: <span className="font-mono font-bold">{user?.email || 'Not logged in'}</span></p>
+            </div>
+          )}
+          
+          <p className="text-gray-600 mb-6">
+            Upload a **clean, structured PDF** containing your college's placement questions. Our AI will parse and save them to your custom database.
+          </p>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* College Name */}
             <div>
-              <label htmlFor="collegeName" className="block text-sm font-medium text-gray-700">
-                College Name
-              </label>
-              <input
-                type="text"
-                id="collegeName"
-                value={collegeName}
-                onChange={(e) => setCollegeName(e.target.value)}
-                className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="e.g., IIT Bombay"
-                required
-              />
-              <p className="text-xs text-gray-500 mt-1">This must *exactly* match the name students will search for.</p>
-            </div>
+              <label htmlFor="collegeName" className="block text-sm font-medium text-gray-700">
+                College Name
+              </label>
+              <input
+                type="text"
+                id="collegeName"
+                value={collegeName}
+                onChange={(e) => setCollegeName(e.target.value)}
+                disabled={!isAuthorized}
+                className={`mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 ${!isAuthorized ? 'bg-gray-100 cursor-not-allowed opacity-60' : ''}`}
+                placeholder="e.g., IIT Bombay"
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">This must *exactly* match the name students will search for.</p>
+            </div>
 
-            {/* File Upload */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Questions PDF
-              </label>
-              
+            {/* File Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Questions PDF
+              </label>
+
               {/* --- **** START: DRAG AND DROP AREA W/ HANDLERS **** --- */}
-              <div 
+              <div 
                 className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 rounded-md ${
-                  isDragActive ? 'border-indigo-600 bg-indigo-50' : 'border-gray-300'
-                } border-dashed transition-colors`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
+                  isDragActive && isAuthorized ? 'border-indigo-600 bg-indigo-50' : 'border-gray-300'
+                } border-dashed transition-colors ${!isAuthorized ? 'bg-gray-100 opacity-60 cursor-not-allowed' : ''}`}
+                onDragOver={isAuthorized ? handleDragOver : undefined}
+                onDragLeave={isAuthorized ? handleDragLeave : undefined}
+                onDrop={isAuthorized ? handleDrop : undefined}
               >
                 <div className="space-y-1 text-center">
                   <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
@@ -179,18 +196,16 @@ const UploadDataPage = () => {
 
             </div>
 
-            {/* Submit Button */}
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 focus:outline-none"
-              >
-                {loading ? 'Parsing & Saving...' : 'Upload and Process File'}
-              </button>
-            </div>
-
-            {/* Message Area */}
+            {/* Submit Button */}
+            <div>
+              <button
+                type="submit"
+                disabled={loading || !isAuthorized}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed focus:outline-none"
+              >
+                {!isAuthorized ? 'Access Denied' : loading ? 'Parsing & Saving...' : 'Upload and Process File'}
+              </button>
+            </div>            {/* Message Area */}
             {message.text && (
               <div className={`p-3 rounded-md text-center ${message.isError ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
                 {message.text}

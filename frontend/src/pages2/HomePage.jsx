@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import Header from '../components2/Home/Header';
 import HeroSection from '../components2/Home/HeroSection';
 import FeaturedCompanies from '../components2/Home/FeaturedCompanies';
@@ -9,12 +9,34 @@ import CTASection from '../components2/Home/CTASection';
 import Footer from '../components2/Home/Footer';
 
 function HomePage() {
+  const companiesRef = useRef(null);
+  const featuresRef = useRef(null);
+
+  const scrollToCompanies = () => {
+    companiesRef.current.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const scrollToFeatures = () => {
+    featuresRef.current.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <div className="bg-white dark:bg-gray-950 transition-colors duration-300">
       <Header />
-      <HeroSection />
-      <FeaturedCompanies />
-      <FeaturesSection />
+      <HeroSection
+        onStartPreparation={scrollToCompanies}
+        onLearnMore={scrollToFeatures}
+      />
+
+      {/* Attach refs */}
+      <div ref={companiesRef}>
+        <FeaturedCompanies />
+      </div>
+
+      <div ref={featuresRef}>
+        <FeaturesSection />
+      </div>
+
       <HowItWorksSection />
       <TestimonialsSection />
       <CTASection />

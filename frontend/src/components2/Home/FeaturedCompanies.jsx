@@ -29,33 +29,34 @@ function FeaturedCompanies() { // <-- Removed unused 'companyName' prop
               className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 overflow-hidden cursor-pointer"
             >
               {/* Company Header */}
-              <div className="h-32 bg-linear-to-br  flex items-center justify-center p-4">
-                <img
-                  src={company.logo}
-                  alt={company.name}
-                  className="h-32 w-auto object-contain"
-                />
-              </div>
+             <div className="h-32 w-full bg-linear-to-br flex items-center justify-center p-4">
+  <img
+    src={company.logo}
+    alt={company.name}
+    className="max-h-28 w-auto object-contain"
+  />
+</div>
+
 
               {/* Company Info */}
-              <div className="p-6">
+              <div className="p-6 ">
                 <h3 className="text-xl font-bold  text-black  mb-2">
                   {company.name}
                 </h3>
 
                 {/* Rounds Preview */}
-                <div className="space-y-2 mb-6">
+                <div className="space-y-2 mb-6 text-black">
                   {company.rounds.slice(0, 3).map((round, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center text-sm text-gray-900 dark:text-gray-400"
+                      className="flex items-center text-sm text-gray-900"
                     >
                       <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
                       {round.name}
                     </div>
                   ))}
                 </div>
-               <div className="flex gap-3">
+               <div className="flex gap-3 w-full justify-between">
   {/* Leetcode Button (Green) */}
   <button
     onClick={() => {

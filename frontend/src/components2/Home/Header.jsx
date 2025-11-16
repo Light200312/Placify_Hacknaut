@@ -68,7 +68,7 @@ function Header() {
                 onClick={() => navigate('/login')}
                 className="px-6 py-2 text-blue-600 font-bold hover:bg-blue-50 rounded-lg transition"
               >
-                Sign In
+                LogIn
               </button>
               <button
                 onClick={() => navigate('/signup')}

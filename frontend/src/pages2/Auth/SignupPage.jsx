@@ -56,7 +56,7 @@ function SignupPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-500 to-indigo-600 dark:from-blue-900 dark:to-indigo-950 flex items-center justify-center px-4 py-8 transition-colors duration-300">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md p-8 transition-colors duration-300">
+      <div className="bg-white dark:bg-gray-200 rounded-2xl shadow-2xl w-full max-w-md p-8 transition-colors duration-300">
         {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-black bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
@@ -168,7 +168,7 @@ function SignupPage() {
         <p className="text-center text-gray-600 text-sm mt-6">
           Already have an account?{' '}
           <Link to="/login" className="text-blue-600 font-bold hover:underline">
-            Sign in here
+            login...
           </Link>
         </p>
       </div>

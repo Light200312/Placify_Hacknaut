@@ -34,13 +34,13 @@ function LoginPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-500 to-indigo-600 dark:from-blue-900 dark:to-indigo-950 flex items-center justify-center px-4 transition-colors duration-300">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md p-8 transition-colors duration-300">
+      <div className="bg-white te dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md p-8 transition-colors duration-300">
         {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-black bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
             Placify
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">Welcome back! Sign in to your account</p>
+          <p className="text-gray-600 dark:text-gray-400">Welcome back! login to your account</p>
         </div>
 
         {/* Error Message */}
@@ -54,7 +54,7 @@ function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Email Field */}
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Email Address</label>
+            <label className="block text-gray-100 dark:text-gray-300 font-semibold mb-2">Email Address</label>
             <input
               type="email"
               name="email"
