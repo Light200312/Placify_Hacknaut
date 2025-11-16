@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
-
+import UploadDataPage from './pages/UploadDataPage.jsx';
 // Pages2 (New structure)
 import HomePage from './pages2/HomePage';
 import CompanyDetailPage from './pages2/CompanyDetailPage';
@@ -53,6 +53,8 @@ function App() {
       <Route path="/jobposts" element={<JobPost />} />
       <Route path="/collegehiring" element={<CollegeHiring />} />
       <Route path="/suggestions" element={<SuggestionPage />} />
+      <Route path="/suggestions" element={<SuggestionPage />} />
+      <Route path="/uploadDB" element={<UploadDataPage />} />
 
       {/* 404 Not Found */}
       <Route path="*" element={<div className="min-h-screen flex items-center justify-center"><div className="text-center text-red-600 text-2xl font-bold">404 - Page Not Found</div></div>} />

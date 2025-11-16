@@ -288,6 +288,82 @@ The JSON MUST match this schema:
 Generate *exactly* the number of questions requested.
 `;
 
+export async function callGeminiVisionForParsing(fileBuffer, mimeType, systemPrompt, schema) {
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
+  
+  // Convert buffer to base64 string
+  const imageData = fileBuffer.toString('base64');
+  
+  const payload = {
+    contents: [
+      {
+        role: "user",
+        parts: [
+          { text: "Please parse the attached file according to the system prompt." },
+          {
+            inlineData: {
+              mimeType: mimeType,
+              data: imageData
+            }
+          }
+        ]
+      }
+    ],
+    systemInstruction: {
+      parts: [{ text: systemPrompt }]
+    },
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: schema, // Apply the specific schema for parsing
+      temperature: 0.1
+    }
+  };
+
+  // Using robust fetch logic (similar to your existing functions)
+  const maxRetries = 2;
+  const timeout = 120000; 
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, timeout);
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`Gemini Vision API request failed: ${response.status} ${errorBody}`);
+      }
+      const result = await response.json();
+
+      if (result.candidates && result.candidates[0]?.content?.parts?.[0]?.text) {
+        // Clean the text response which might be wrapped in markdown
+        const rawText = result.candidates[0].content.parts[0].text;
+        const jsonText = rawText.replace(/```json|```/g, '').trim();
+        return JSON.parse(jsonText); // Success!
+      } else {
+        throw new Error("Invalid response structure from Gemini API.");
+      }
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError' || error.code === 'ECONNRESET') {
+        if (attempt === maxRetries) {
+          throw new Error(`Gemini Vision request (parsing) failed after ${maxRetries} attempts.`);
+        }
+      } else {
+        throw error;
+      }
+    }
+  }
+}
 
 
 

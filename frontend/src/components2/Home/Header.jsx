@@ -42,6 +42,9 @@ function Header() {
       <Link to="/suggestions" className="text-gray-700 hover:text-blue-600 font-semibold transition">
         Expert Suggestions
       </Link>
+      <Link to="/uploadDB" className="text-gray-700 hover:text-blue-600 font-semibold transition">
+        College DB Upload
+      </Link>
       {/* suggestions */}
         </nav>
 
