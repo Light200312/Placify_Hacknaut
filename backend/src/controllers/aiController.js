@@ -199,7 +199,7 @@ const prepGuideSchema = {
         },
         "required": ["title", "url"]
       },
-      "description": "A list of relevant discussion threads from sites like Reddit or Quora about the company's hiring process."
+      "description": "A list of relevant discussion threads from sites like  Reddit or Quora  about the company's hiring process."
     }
   },
   "required": ["hiringStats", "detailedRounds", "prepLinks", "topicsToFocusOn", "discussionThreads"]
